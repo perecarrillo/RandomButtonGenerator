@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import './randomWords.dart';
+import 'randomButtons.dart';
 
 void main() => runApp(MyApp());
 
@@ -10,6 +10,6 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
             primaryColor: Colors.purple,
             appBarTheme: AppBarTheme(backgroundColor: Colors.amber)),
-        home: RandomWords());
+        home: RandomButtons());
   }
 }
