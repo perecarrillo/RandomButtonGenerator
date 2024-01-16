@@ -303,8 +303,7 @@ class RandomButtonsState extends State<RandomButtons> {
           IconButton(
               onPressed: openSavedPage,
               icon: const Icon(
-                Icons.favorite,
-                color: Colors.red,
+                Icons.favorite_border_rounded,
               ))
         ],
       ),
