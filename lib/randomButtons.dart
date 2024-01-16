@@ -1,62 +1,129 @@
+import 'dart:collection';
 import 'dart:math';
+import 'package:change_case/change_case.dart';
 import 'package:flutter/material.dart';
-import 'package:english_words/english_words.dart';
 
 Random rng = new Random();
 
-BorderSide getRandomSide() {
-  return BorderSide(
+(BorderSide, String) getRandomSide() {
+  final BorderSide side = BorderSide(
     color: Colors.primaries[rng.nextInt(Colors.primaries.length)],
     strokeAlign: rng.nextDouble() * 2 - 1,
     style: rng.nextBool() ? BorderStyle.none : BorderStyle.solid,
     width: rng.nextDouble() * 3,
   );
+  return (
+    side,
+    '\n    Color: ${side.color.value.toRadixString(16)}\n    StrokeAlign: ${side.strokeAlign.toStringAsPrecision(3)}\n    Style: ${side.style.toString().split('.')[1].toTitleCase()}\n    Width: ${side.width}'
+  );
 }
 
-OutlinedBorder? getRandomShape() {
+(OutlinedBorder?, String) getRandomShape() {
   final random = rng.nextInt(7);
+  Map<String, String> values = new LinkedHashMap();
+  OutlinedBorder? border;
+
+  final (side, sideString) = getRandomSide();
+
   switch (random) {
     case 0:
-      return BeveledRectangleBorder(
-          borderRadius: BorderRadius.all(
-              Radius.elliptical(rng.nextDouble() * 2, rng.nextDouble() * 2)),
-          side: getRandomSide());
+      values['Type'] = 'BeveledRectangleBorder';
+      final borderRadiusx = rng.nextDouble() * 2;
+      final borderRadiusy = rng.nextDouble() * 2;
+      values['BorderRadius'] =
+          '${borderRadiusx.toStringAsPrecision(3)} x ${borderRadiusy.toStringAsPrecision(3)}';
+
+      border = BeveledRectangleBorder(
+          borderRadius:
+              BorderRadius.all(Radius.elliptical(borderRadiusx, borderRadiusy)),
+          side: side);
+      break;
     case 1:
-      return CircleBorder(
-        eccentricity: rng.nextDouble(),
-        side: getRandomSide(),
-      );
+      values['Type'] = 'CircleBorder';
+      final eccentricity = rng.nextDouble();
+      values['Eccentricity'] = eccentricity.toStringAsPrecision(3);
+      border = CircleBorder(eccentricity: eccentricity, side: side);
+      break;
     case 2:
-      return ContinuousRectangleBorder(
-        borderRadius: BorderRadius.all(
-            Radius.elliptical(rng.nextDouble() * 2, rng.nextDouble() * 2)),
-        side: getRandomSide(),
+      values['Type'] = 'ContinuousRectangleBorder';
+
+      final borderRadiusx = rng.nextDouble() * 2;
+      final borderRadiusy = rng.nextDouble() * 2;
+      values['BorderRadius'] =
+          '${borderRadiusx.toStringAsPrecision(3)} x ${borderRadiusy.toStringAsPrecision(3)}';
+
+      border = ContinuousRectangleBorder(
+        borderRadius:
+            BorderRadius.all(Radius.elliptical(borderRadiusx, borderRadiusy)),
+        side: side,
       );
+      break;
     case 3:
-      return LinearBorder(
-        bottom: LinearBorderEdge(
-            alignment: rng.nextDouble() * 2 - 1, size: rng.nextDouble()),
-        end: LinearBorderEdge(
-            alignment: rng.nextDouble() * 2 - 1, size: rng.nextDouble()),
-        start: LinearBorderEdge(
-            alignment: rng.nextDouble() * 2 - 1, size: rng.nextDouble()),
-        top: LinearBorderEdge(
-            alignment: rng.nextDouble() * 2 - 1, size: rng.nextDouble()),
-        side: getRandomSide(),
+      values['Type'] = 'LinearBorder';
+      final bottomAlignment = rng.nextDouble() * 2 - 1;
+      final bottomSize = rng.nextDouble();
+      values['BottomAlignment'] = bottomAlignment.toStringAsPrecision(3);
+      values['BottomSize'] = bottomSize.toStringAsPrecision(3);
+
+      final endAlignment = rng.nextDouble() * 2 - 1;
+      final endSize = rng.nextDouble();
+      values['EndAlignment'] = endAlignment.toStringAsPrecision(3);
+      values['EndSize'] = endSize.toStringAsPrecision(3);
+
+      final startAlignment = rng.nextDouble() * 2 - 1;
+      final startSize = rng.nextDouble();
+      values['StartAlignment'] = startAlignment.toStringAsPrecision(3);
+      values['StartSize'] = startSize.toStringAsPrecision(3);
+
+      final topAlignment = rng.nextDouble() * 2 - 1;
+      final topSize = rng.nextDouble();
+      values['TopAlignment'] = topAlignment.toStringAsPrecision(3);
+      values['TopSize'] = topSize.toStringAsPrecision(3);
+
+      border = LinearBorder(
+        bottom: LinearBorderEdge(alignment: bottomAlignment, size: bottomSize),
+        end: LinearBorderEdge(alignment: endAlignment, size: endSize),
+        start: LinearBorderEdge(alignment: startAlignment, size: startSize),
+        top: LinearBorderEdge(alignment: topAlignment, size: topSize),
+        side: side,
       );
+      break;
     case 4:
-      return RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(
-            Radius.elliptical(rng.nextDouble() * 2, rng.nextDouble() * 2)),
-        side: getRandomSide(),
+      values['Type'] = 'RoundedRectangleBorder';
+
+      final borderRadiusx = rng.nextDouble() * 2;
+      final borderRadiusy = rng.nextDouble() * 2;
+      values['BorderRadius'] =
+          '${borderRadiusx.toStringAsPrecision(3)} x ${borderRadiusy.toStringAsPrecision(3)}';
+
+      border = RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.all(Radius.elliptical(borderRadiusx, borderRadiusy)),
+        side: side,
       );
+      break;
     case 5:
-      return StadiumBorder(side: getRandomSide());
+      values['Type'] = 'StadiumBorder';
+
+      border = StadiumBorder(side: side);
+      break;
     case 6:
+      values['Type'] = 'StarBorder';
       final double sum = rng.nextDouble() - 0.0001;
       final double pointR = rng.nextDouble() * sum;
-      return StarBorder(
-        side: getRandomSide(),
+      final innerRadiusRatio = rng.nextDouble();
+      final points = rng.nextInt(50) + 2;
+      final rotation = rng.nextDouble() * 360;
+      final squash = rng.nextDouble();
+      values['InnerRadiusRatio'] = innerRadiusRatio.toStringAsPrecision(3);
+      values['Points'] = points.toStringAsPrecision(3);
+      values['PointRounding'] = pointR.toStringAsPrecision(3);
+      values['Rotation'] = rotation.toStringAsPrecision(3);
+      values['Squash'] = squash.toStringAsPrecision(3);
+      values['ValleyRounding'] = (sum - pointR).toStringAsPrecision(3);
+
+      border = StarBorder(
+        side: side,
         innerRadiusRatio: rng.nextDouble(),
         pointRounding: pointR,
         points: rng.nextInt(50) + 2,
@@ -64,20 +131,84 @@ OutlinedBorder? getRandomShape() {
         squash: rng.nextDouble(),
         valleyRounding: sum - pointR,
       );
+      break;
     default:
-      return null;
+      border = null;
   }
+
+  values['Side'] = sideString;
+
+  String string = '';
+
+  for (MapEntry<String, String> i in values.entries) {
+    string = '$string\n  ${i.key}: ${i.value}';
+  }
+
+  string = string.trim();
+  return (border, string);
 }
 
-Widget generateRandomButton() {
+Color getRandomColor() {
+  return Colors.primaries[rng.nextInt(Colors.primaries.length)];
+}
+
+Widget generateRandomButton(BuildContext context) {
+  final Color backgroundColor = getRandomColor();
+  final double elevation = rng.nextDouble() * 10;
+  final Color foregroundColor = getRandomColor();
+  final Color shadowColor = getRandomColor();
+  final (OutlinedBorder? shape, String shapeString) = getRandomShape();
   return FilledButton(
-    onPressed: () {},
+    onPressed: () {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+            title: const Text("Properties"),
+            content: SizedBox(
+              // width: MediaQuery.of(context).size.width,
+              width: double.maxFinite,
+              child: ListView(
+                shrinkWrap: true,
+                children: <Widget>[
+                  ListTile(
+                    title: Text("Background"),
+                    subtitle:
+                        Text('  #${backgroundColor.value.toRadixString(16)}'),
+                    trailing:
+                        Icon(Icons.square_rounded, color: backgroundColor),
+                  ),
+                  ListTile(
+                    title: Text("Elevation"),
+                    subtitle: Text('  ${elevation.toStringAsPrecision(3)}'),
+                  ),
+                  ListTile(
+                    title: Text("Foreground"),
+                    subtitle:
+                        Text('  #${foregroundColor.value.toRadixString(16)}'),
+                    trailing:
+                        Icon(Icons.square_rounded, color: foregroundColor),
+                  ),
+                  ListTile(
+                    title: Text("Shadow"),
+                    subtitle: Text('  #${shadowColor.value.toRadixString(16)}'),
+                    trailing: Icon(Icons.square_rounded, color: shadowColor),
+                  ),
+                  ListTile(
+                    title: Text("Shape"),
+                    subtitle: Text('  $shapeString'),
+                    minVerticalPadding: 0,
+                  ),
+                ],
+              ),
+            )),
+      );
+    },
     style: FilledButton.styleFrom(
-      backgroundColor: Colors.primaries[rng.nextInt(Colors.primaries.length)],
-      elevation: rng.nextDouble() * 10,
-      foregroundColor: Colors.primaries[rng.nextInt(Colors.primaries.length)],
-      shadowColor: Colors.primaries[rng.nextInt(Colors.primaries.length)],
-      shape: getRandomShape(),
+      backgroundColor: backgroundColor,
+      elevation: elevation,
+      foregroundColor: foregroundColor,
+      shadowColor: shadowColor,
+      shape: shape,
     ),
     child: const Text('Text'),
   );
@@ -99,7 +230,7 @@ class RandomButtonsState extends State<RandomButtons> {
         index = index ~/ 2;
 
         while (index >= buttons.length) {
-          buttons.add(generateRandomButton()); // Change This
+          buttons.add(generateRandomButton(context)); // Change This
         }
 
         return buttons[index];
@@ -107,112 +238,14 @@ class RandomButtonsState extends State<RandomButtons> {
     );
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Random Button Generator"),
+        title: const Text("Random Button Generator"),
         centerTitle: true,
       ),
       body: buildList(),
-    );
-  }
-}
-
-class RandomWords extends StatefulWidget {
-  @override
-  RandomWordsState createState() => RandomWordsState();
-}
-
-class RandomWordsState extends State<RandomWords> {
-  final _randomWordPairs = <WordPair>[];
-  final _savedWordPairs = Set<WordPair>();
-
-  Widget _buildList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemBuilder: (context, item) {
-        if (item.isOdd) return Divider();
-        final index = item ~/ 2;
-
-        if (index >= _randomWordPairs.length) {
-          _randomWordPairs.addAll(generateWordPairs().take(10));
-        }
-
-        return _buildRow(_randomWordPairs[index]);
-      },
-    );
-  }
-
-  Widget _buildRow(pair) {
-    final alreadySaved = _savedWordPairs.contains(pair);
-    return ListTile(
-      title: Text(
-        pair.asPascalCase,
-        style: TextStyle(fontSize: 18),
-      ),
-      trailing: Icon(
-        alreadySaved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-        color: alreadySaved ? Colors.red : null,
-      ),
-      onTap: () {
-        setState(() {
-          if (alreadySaved) {
-            _savedWordPairs.remove(pair);
-          } else {
-            _savedWordPairs.add(pair);
-          }
-        });
-      },
-      hoverColor: Colors.black,
-    );
-  }
-
-  void _pushSaved() {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (BuildContext context) {
-        final Iterable<ListTile> tiles = _savedWordPairs.map((WordPair pair) {
-          return ListTile(
-            title: Text(
-              pair.asPascalCase,
-              style: TextStyle(fontSize: 16.0),
-            ),
-            trailing: Icon(
-              Icons.favorite_rounded,
-              color: Colors.red,
-            ),
-            onTap: () {
-              setState(() {
-                _savedWordPairs.remove(pair);
-              });
-            },
-          );
-        });
-        final List<Widget> divided =
-            ListTile.divideTiles(context: context, tiles: tiles).toList();
-
-        return Scaffold(
-          appBar: AppBar(
-            title: Text("Saved WordPairs"),
-          ),
-          body: ListView(children: divided),
-        );
-      },
-    ));
-  }
-
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('WordPair Generator'),
-        centerTitle: true,
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.list),
-            onPressed: _pushSaved,
-          )
-        ],
-      ),
-      body: _buildList(),
     );
   }
 }

@@ -37,6 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   english_words: ^4.0.0
   flutter_app_name: ^0.1.1
+  change_case: ^2.0.1
 
 flutter_app_name:
   name: "Random Buttons"
