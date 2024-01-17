@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'randomButtons.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(RandomButtonsApp());
 
-class MyApp extends StatelessWidget {
+class RandomButtonsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
         theme: ThemeData(
-            primaryColor: Colors.purple,
-            appBarTheme: AppBarTheme(backgroundColor: Colors.amber)),
+            appBarTheme: const AppBarTheme(backgroundColor: Colors.amber)),
         home: RandomButtons());
   }
 }
