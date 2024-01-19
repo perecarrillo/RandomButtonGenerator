@@ -1,33 +1,42 @@
-import 'dart:collection';
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:change_case/change_case.dart';
 import 'package:flutter/material.dart';
+import 'package:localstore/localstore.dart';
 
 Random rng = new Random();
 
 class RandomButtons extends StatefulWidget {
+  const RandomButtons({super.key});
+
   @override
   RandomButtonsState createState() => RandomButtonsState();
 }
 
 class RandomButtonsState extends State<RandomButtons> {
+  final db = Localstore.instance;
+  // Color is stored as an integer, to get the Color simply do Color(button['color'])
+  // BorderStyle is stored as a boolean, to get the BorderStyle do boolToBorderStyle(button['borderStyle'])
   final List<Map<String, dynamic>> buttons = [];
-  final List<Map<String, dynamic>> favorites = [];
+  List<Map<String, dynamic>> favorites =
+      []; // Key id is unique. same id as the one used for saving
 
   bool filterOn = false;
 
-  Color getRandomColor() {
-    return Colors.primaries[rng.nextInt(Colors.primaries.length)];
+  int getRandomColor() {
+    return Colors.primaries[rng.nextInt(Colors.primaries.length)].value;
   }
 
   Map<String, dynamic> getRandomSideAttributes() {
     Map<String, dynamic> attributes = new Map();
     attributes['color'] = getRandomColor();
     attributes['strokeAlign'] = rng.nextDouble() * 2 - 1;
-    attributes['style'] = rng.nextBool() ? BorderStyle.none : BorderStyle.solid;
+    attributes['style'] = rng.nextBool();
     attributes['width'] = rng.nextDouble() * 3;
     return attributes;
+  }
+
+  BorderStyle boolToBorderStyle(bool border) {
+    return border ? BorderStyle.solid : BorderStyle.none;
   }
 
   Map<String, dynamic> getRandomShapeAttributes() {
@@ -103,15 +112,15 @@ class RandomButtonsState extends State<RandomButtons> {
 
   BorderSide createSideFrom(Map<String, dynamic> side) {
     return BorderSide(
-      color: side['color'],
+      color: Color(side['color']),
       strokeAlign: side['strokeAlign'],
-      style: side['style'],
+      style: boolToBorderStyle(side['style']),
       width: side['width'],
     );
   }
 
   String sideToString(Map<String, dynamic> side) {
-    return '\n    Color: #${side['color'].value.toRadixString(16)}\n    StrokeAlign: ${side['strokeAlign'].toStringAsPrecision(3)}\n    Style: ${side['style'].toString().split('.')[1].toTitleCase()}\n    Width: ${side['width'].toStringAsPrecision(3)}';
+    return '\n    Color: #${side['color'].toRadixString(16)}\n    StrokeAlign: ${side['strokeAlign'].toStringAsPrecision(3)}\n    Style: ${(side['style'] ? BorderStyle.solid : BorderStyle.none).toString().split('.')[1].toTitleCase()}\n    Width: ${side['width'].toStringAsPrecision(3)}';
   }
 
   OutlinedBorder? createShapeFrom(Map<String, dynamic> shape) {
@@ -239,9 +248,9 @@ class RandomButtonsState extends State<RandomButtons> {
                         ListTile(
                           title: const Text("Background"),
                           subtitle: Text(
-                              '  #${but['backgroundColor'].value.toRadixString(16)}'),
+                              '  #${but['backgroundColor'].toRadixString(16)}'),
                           trailing: Icon(Icons.square_rounded,
-                              color: but['backgroundColor']),
+                              color: Color(but['backgroundColor'])),
                         ),
                         ListTile(
                           title: const Text("Elevation"),
@@ -251,16 +260,16 @@ class RandomButtonsState extends State<RandomButtons> {
                         ListTile(
                           title: const Text("Foreground"),
                           subtitle: Text(
-                              '  #${but['foregroundColor'].value.toRadixString(16)}'),
+                              '  #${but['foregroundColor'].toRadixString(16)}'),
                           trailing: Icon(Icons.square_rounded,
-                              color: but['foregroundColor']),
+                              color: Color(but['foregroundColor'])),
                         ),
                         ListTile(
                           title: const Text("Shadow"),
                           subtitle: Text(
-                              '  #${but['shadowColor'].value.toRadixString(16)}'),
+                              '  #${but['shadowColor'].toRadixString(16)}'),
                           trailing: Icon(Icons.square_rounded,
-                              color: but['shadowColor']),
+                              color: Color(but['shadowColor'])),
                         ),
                         ListTile(
                           title: const Text("Shape"),
@@ -273,9 +282,8 @@ class RandomButtonsState extends State<RandomButtons> {
                   actions: [
                     IconButton(
                       onPressed: () {
-                        func() => saved
-                            ? favorites.remove(but)
-                            : favorites.insert(0, but);
+                        func() =>
+                            saved ? deleteFavorite(but) : addFavorite(but);
 
                         dialogSetState(func);
                         if (parentSetState != null) {
@@ -297,10 +305,10 @@ class RandomButtonsState extends State<RandomButtons> {
         );
       },
       style: FilledButton.styleFrom(
-        backgroundColor: but['backgroundColor'],
+        backgroundColor: Color(but['backgroundColor']),
         elevation: but['elevation'],
-        foregroundColor: but['foregroundColor'],
-        shadowColor: but['shadowColor'],
+        foregroundColor: Color(but['foregroundColor']),
+        shadowColor: Color(but['shadowColor']),
         shape: createShapeFrom(but['shape']),
       ),
       child: const Text('Text'),
@@ -374,6 +382,38 @@ class RandomButtonsState extends State<RandomButtons> {
             );
           });
         });
+  }
+
+  void deleteFavorite(but) {
+    var id = but['id'];
+    db.collection('favorites').doc(id).delete();
+    favorites.remove(but);
+  }
+
+  void addFavorite(but) {
+    but['id'] = getUniqueId('favorites');
+    db.collection('favorites').doc(but['id']).set(but);
+
+    favorites.insert(0, but);
+  }
+
+  // gets an unique id inside folder
+  String getUniqueId(String folder) {
+    return db.collection(folder).doc().id;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadFavorites();
+  }
+
+  void loadFavorites() {
+    (db.collection('favorites').get()).then((value) => setState(() {
+          value?.entries.forEach((element) {
+            favorites.add(element.value);
+          });
+        }));
   }
 
   @override

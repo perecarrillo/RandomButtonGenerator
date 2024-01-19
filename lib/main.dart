@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'randomButtons.dart';
 
-void main() => runApp(RandomButtonsApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(RandomButtonsApp());
+}
 
 class RandomButtonsApp extends StatelessWidget {
   @override
