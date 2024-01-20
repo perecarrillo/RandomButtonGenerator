@@ -397,16 +397,13 @@ class RandomButtonsState extends State<RandomButtons> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          width: 56,
-          child: TextButton(
+        TextButton(
             child: const Text(
               "Reset",
               style: TextStyle(fontSize: 12),
             ),
             onPressed: () => dialogSetState(() => color[0] = null),
           ),
-        ),
         Expanded(
           child: ListTile(
             title: Text(name),
