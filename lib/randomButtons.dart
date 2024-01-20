@@ -26,9 +26,29 @@ class RandomButtonsState extends State<RandomButtons> {
   bool filterOn = false;
 
   int? backgroundColor;
+  int? shadowColor;
+  int? borderColor;
+  int? textColor;
+  double? elevation;
+
+  double getElevation() {
+    return elevation ?? rng.nextDouble() * 10;
+  }
 
   int getBackgroundColor() {
     return backgroundColor ?? getRandomColor();
+  }
+
+  int getShadowColor() {
+    return shadowColor ?? getRandomColor();
+  }
+
+  int getBorderColor() {
+    return borderColor ?? getRandomColor();
+  }
+
+  int getTextColor() {
+    return textColor ?? getRandomColor();
   }
 
   int getRandomColor() {
@@ -42,7 +62,7 @@ class RandomButtonsState extends State<RandomButtons> {
 
   Map<String, dynamic> getRandomSideAttributes() {
     Map<String, dynamic> attributes = new Map();
-    attributes['color'] = getRandomColor();
+    attributes['color'] = getBorderColor();
     attributes['strokeAlign'] = rng.nextDouble() * 2 - 1;
     attributes['style'] = rng.nextBool();
     attributes['width'] = rng.nextDouble() * 3;
@@ -115,10 +135,10 @@ class RandomButtonsState extends State<RandomButtons> {
     Map<String, dynamic> button = Map();
 
     button['backgroundColor'] = getBackgroundColor();
-    button['elevation'] = rng.nextDouble() * 10;
+    button['elevation'] = getElevation();
 
-    button['foregroundColor'] = getRandomColor();
-    button['shadowColor'] = getRandomColor();
+    button['foregroundColor'] = getTextColor();
+    button['shadowColor'] = getShadowColor();
     button['shape'] = getRandomShapeAttributes();
 
     return button;
@@ -372,10 +392,58 @@ class RandomButtonsState extends State<RandomButtons> {
     );
   }
 
+  Widget buildFilterRow(
+      BuildContext dialogContext, dialogSetState, String name, color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 56,
+          child: TextButton(
+            child: const Text(
+              "Reset",
+              style: TextStyle(fontSize: 12),
+            ),
+            onPressed: () => dialogSetState(() => color[0] = null),
+          ),
+        ),
+        Expanded(
+          child: ListTile(
+            title: Text(name),
+            trailing: color[0] != null
+                ? Icon(Icons.square_rounded, color: Color(color[0]!))
+                : const GradientIcon(
+                    offset: Offset.zero,
+                    icon: Icons.square_rounded,
+                    gradient: SweepGradient(colors: [
+                      Colors.red,
+                      Colors.orange,
+                      Colors.yellow,
+                      Colors.lightGreen,
+                      Colors.green,
+                      Colors.lightBlue,
+                      Colors.blue,
+                      Colors.purple
+                    ]),
+                  ),
+            titleAlignment: ListTileTitleAlignment.center,
+            onTap: () => showColorPicker(dialogContext, dialogSetState, color),
+          ),
+        ),
+      ],
+    );
+  }
+
   void openFilterPage(globalContext, globalSetState) {
-    var newBackgroundColor = [
-      backgroundColor
-    ]; // It is a list with a single element. Used to pass by reference and get result from showColorPicker
+    // It is a list with a single element. Used to pass by reference and get result from showColorPicker
+    var newBackgroundColor = [backgroundColor];
+    var newShadowColor = [shadowColor];
+    var newBorderColor = [borderColor];
+    var newTextColor = [textColor];
+
+    var newElevation;
+
+    var textFieldController = TextEditingController();
 
     showDialog(
       barrierDismissible: false, // Save or Cancel, nothing else
@@ -390,62 +458,69 @@ class RandomButtonsState extends State<RandomButtons> {
                 child: ListView(
                   shrinkWrap: true,
                   children: <Widget>[
+                    buildFilterRow(dialogContext, dialogSetState,
+                        "Background Color: ", newBackgroundColor),
+                    buildFilterRow(dialogContext, dialogSetState,
+                        "Text Color: ", newTextColor),
+                    buildFilterRow(dialogContext, dialogSetState,
+                        "Border Color: ", newBorderColor),
+                    buildFilterRow(dialogContext, dialogSetState,
+                        "Shadow Color: ", newShadowColor),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        SizedBox(
-                          width: 60,
-                          child: TextButton(
-                            child: const Text("Reset",
-                                style: TextStyle(fontSize: 12)),
-                            onPressed: () => dialogSetState(
-                                () => newBackgroundColor[0] = null),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 6),
+                        ),
+                        const Text(
+                          "Elevation: ",
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        Flexible(
+                          child: TextField(
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            onChanged: (value) {
+                              newElevation =
+                                  double.tryParse(value.replaceAll(',', '.'));
+                            },
+                            onSubmitted: (value) {
+                              if (newElevation == null || newElevation < 0) {
+                                newElevation = null;
+                                textFieldController.clear();
+                              }
+                            },
+                            controller: textFieldController,
                           ),
                         ),
-                        Expanded(
-                          child: ListTile(
-                            title: const Text("Background Color: "),
-                            trailing: newBackgroundColor[0] != null
-                                ? Icon(Icons.square_rounded,
-                                    color: Color(newBackgroundColor[0]!))
-                                : const GradientIcon(
-                                    offset: Offset.zero,
-                                    icon: Icons.square_rounded,
-                                    gradient: SweepGradient(colors: [
-                                      Colors.red,
-                                      Colors.orange,
-                                      Colors.yellow,
-                                      Colors.lightGreen,
-                                      Colors.green,
-                                      Colors.lightBlue,
-                                      Colors.blue,
-                                      Colors.purple
-                                    ]),
-                                  ),
-                            titleAlignment: ListTileTitleAlignment.center,
-                            onTap: () => showColorPicker(dialogContext,
-                                dialogSetState, newBackgroundColor),
-                          ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
               actions: <Widget>[
                 TextButton(
+                  onPressed: () => Navigator.pop(globalContext),
+                  child: const Text("Cancel"),
+                ),
+                TextButton(
                   child: const Text("Save"),
                   onPressed: () => globalSetState(() {
                     backgroundColor = newBackgroundColor[0];
+                    borderColor = newBorderColor[0];
+                    shadowColor = newShadowColor[0];
+                    textColor = newTextColor[0];
+                    if (newElevation != null && newElevation >= 0) {
+                      elevation = newElevation;
+                    }
                     filterOn = !filterOn;
                     buttons.clear();
                     Navigator.pop(globalContext);
                   }),
                 ),
-                TextButton(
-                  onPressed: () => Navigator.pop(globalContext),
-                  child: const Text("Cancel"),
-                )
               ],
             );
           },
@@ -515,7 +590,7 @@ class RandomButtonsState extends State<RandomButtons> {
       // Estic bastant segur de q no caldria i es podria passar el context i setState globals...
       builder: (inContext, inSetState) => Scaffold(
         appBar: AppBar(
-          title: const Text("Random Button Generator"),
+          title: const FittedBox(child: Text("Random Button Generator")),
           centerTitle: true,
           actions: <Widget>[
             IconButton(
