@@ -134,6 +134,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.1"
+  flutter_colorpicker:
+    dependency: "direct main"
+    description:
+      name: flutter_colorpicker
+      sha256: "458a6ed8ea480eb16ff892aedb4b7092b2804affd7e046591fb03127e8d8ef8b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.3"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
@@ -155,6 +163,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  gradient_icon:
+    dependency: "direct main"
+    description:
+      name: gradient_icon
+      sha256: "5852c1f44825e49d479c91602b5e9e17a4fbc49af69ac314b1f906b0c62c6193"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.9"
   image:
     dependency: transitive
     description:

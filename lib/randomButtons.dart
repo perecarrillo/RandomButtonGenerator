@@ -1,7 +1,9 @@
 import 'dart:math';
 import 'package:change_case/change_case.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:localstore/localstore.dart';
+import 'package:gradient_icon/gradient_icon.dart';
 
 Random rng = new Random();
 
@@ -17,13 +19,25 @@ class RandomButtonsState extends State<RandomButtons> {
   // Color is stored as an integer, to get the Color simply do Color(button['color'])
   // BorderStyle is stored as a boolean, to get the BorderStyle do boolToBorderStyle(button['borderStyle'])
   final List<Map<String, dynamic>> buttons = [];
-  List<Map<String, dynamic>> favorites =
-      []; // Key id is unique. same id as the one used for saving
+
+  // Key id is unique. same id as the one used for saving
+  List<Map<String, dynamic>> favorites = [];
 
   bool filterOn = false;
 
+  int? backgroundColor;
+
+  int getBackgroundColor() {
+    return backgroundColor ?? getRandomColor();
+  }
+
   int getRandomColor() {
-    return Colors.primaries[rng.nextInt(Colors.primaries.length)].value;
+    // return Colors.primaries[rng.nextInt(Colors.primaries.length)].value;
+    return Color(Random().nextInt(0xFFFFFFFF))
+        .withOpacity(Random().nextBool() && Random().nextBool()
+            ? (Random().nextDouble() * 0.8) + 0.2
+            : 1.0)
+        .value;
   }
 
   Map<String, dynamic> getRandomSideAttributes() {
@@ -100,7 +114,7 @@ class RandomButtonsState extends State<RandomButtons> {
   Map<String, dynamic> getRandomButtonAttributes(BuildContext context) {
     Map<String, dynamic> button = Map();
 
-    button['backgroundColor'] = getRandomColor();
+    button['backgroundColor'] = getBackgroundColor();
     button['elevation'] = rng.nextDouble() * 10;
 
     button['foregroundColor'] = getRandomColor();
@@ -359,29 +373,108 @@ class RandomButtonsState extends State<RandomButtons> {
   }
 
   void openFilterPage(globalContext, globalSetState) {
+    var newBackgroundColor = [
+      backgroundColor
+    ]; // It is a list with a single element. Used to pass by reference and get result from showColorPicker
+
     showDialog(
-        context: globalContext,
-        builder: (context) {
-          return StatefulBuilder(builder: (dialogContext, dialogSetState) {
+      barrierDismissible: false, // Save or Cancel, nothing else
+      context: globalContext,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (dialogContext, dialogSetState) {
             return AlertDialog(
               title: const Text('Filter'),
-              content: Scaffold(), // TODO: filters
+              content: SizedBox(
+                width: double.maxFinite,
+                child: ListView(
+                  shrinkWrap: true,
+                  children: <Widget>[
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 60,
+                          child: TextButton(
+                            child: const Text("Reset",
+                                style: TextStyle(fontSize: 12)),
+                            onPressed: () => dialogSetState(
+                                () => newBackgroundColor[0] = null),
+                          ),
+                        ),
+                        Expanded(
+                          child: ListTile(
+                            title: const Text("Background Color: "),
+                            trailing: newBackgroundColor[0] != null
+                                ? Icon(Icons.square_rounded,
+                                    color: Color(newBackgroundColor[0]!))
+                                : const GradientIcon(
+                                    offset: Offset.zero,
+                                    icon: Icons.square_rounded,
+                                    gradient: SweepGradient(colors: [
+                                      Colors.red,
+                                      Colors.orange,
+                                      Colors.yellow,
+                                      Colors.lightGreen,
+                                      Colors.green,
+                                      Colors.lightBlue,
+                                      Colors.blue,
+                                      Colors.purple
+                                    ]),
+                                  ),
+                            titleAlignment: ListTileTitleAlignment.center,
+                            onTap: () => showColorPicker(dialogContext,
+                                dialogSetState, newBackgroundColor),
+                          ),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
               actions: <Widget>[
                 TextButton(
-                    onPressed: () => globalSetState(() {
-                          filterOn = !filterOn;
-                          buttons.clear();
-                          Navigator.pop(globalContext);
-                        }),
-                    child: const Text("Save")),
+                  child: const Text("Save"),
+                  onPressed: () => globalSetState(() {
+                    backgroundColor = newBackgroundColor[0];
+                    filterOn = !filterOn;
+                    buttons.clear();
+                    Navigator.pop(globalContext);
+                  }),
+                ),
                 TextButton(
                   onPressed: () => Navigator.pop(globalContext),
                   child: const Text("Cancel"),
                 )
               ],
             );
-          });
-        });
+          },
+        );
+      },
+    );
+  }
+
+  // Start is an array containing the variable that should be changed
+  void showColorPicker(BuildContext context, parentSetState, start) {
+    start[0] = start[0] ?? 0xFFFFFFFF;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ColorPicker(
+                pickerColor: Color(start[0]),
+                onColorChanged: (color) =>
+                    parentSetState(() => start[0] = color.value)),
+            TextButton(
+              child: Text('Select'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void deleteFavorite(but) {
