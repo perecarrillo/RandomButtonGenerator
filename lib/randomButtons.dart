@@ -398,12 +398,12 @@ class RandomButtonsState extends State<RandomButtons> {
       mainAxisSize: MainAxisSize.min,
       children: [
         TextButton(
-            child: const Text(
-              "Reset",
-              style: TextStyle(fontSize: 12),
-            ),
-            onPressed: () => dialogSetState(() => color[0] = null),
+          child: const Text(
+            "Reset",
+            style: TextStyle(fontSize: 12),
           ),
+          onPressed: () => dialogSetState(() => color[0] = null),
+        ),
         Expanded(
           child: ListTile(
             title: Text(name),
@@ -438,7 +438,7 @@ class RandomButtonsState extends State<RandomButtons> {
     var newBorderColor = [borderColor];
     var newTextColor = [textColor];
 
-    var newElevation;
+    var newElevation = elevation;
 
     var textFieldController = TextEditingController();
 
@@ -466,8 +466,16 @@ class RandomButtonsState extends State<RandomButtons> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        TextButton(
+                          child: const Text(
+                            "Reset",
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          onPressed: () =>
+                              dialogSetState(() => newElevation = null),
+                        ),
                         const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 6),
+                          padding: EdgeInsets.symmetric(horizontal: 8),
                         ),
                         const Text(
                           "Elevation: ",
@@ -482,12 +490,14 @@ class RandomButtonsState extends State<RandomButtons> {
                                   double.tryParse(value.replaceAll(',', '.'));
                             },
                             onSubmitted: (value) {
-                              if (newElevation == null || newElevation < 0) {
+                              if (newElevation == null || newElevation! < 0) {
                                 newElevation = null;
                                 textFieldController.clear();
                               }
                             },
-                            controller: textFieldController,
+                            controller: textFieldController
+                              ..text =
+                                  newElevation?.toStringAsPrecision(3) ?? '',
                           ),
                         ),
                         const Padding(
@@ -510,7 +520,7 @@ class RandomButtonsState extends State<RandomButtons> {
                     borderColor = newBorderColor[0];
                     shadowColor = newShadowColor[0];
                     textColor = newTextColor[0];
-                    if (newElevation != null && newElevation >= 0) {
+                    if (newElevation == null || newElevation! >= 0) {
                       elevation = newElevation;
                     }
                     filterOn = !filterOn;
